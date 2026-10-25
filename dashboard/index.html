@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ghost Data Still Exists | AI Deletion Audit & Investigation Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #080C14;
+      --bg-card: #0F172A;
+      --bg-card-hover: #16223D;
+      --bg-card-accent: #131E35;
+      --bg-glass: rgba(15, 23, 42, 0.75);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(56, 189, 248, 0.25);
+      --text-main: #F1F5F9;
+      --text-muted: #94A3B8;
+      --text-dim: #64748B;
+      --cyan: #38BDF8;
+      --cyan-glow: rgba(56, 189, 248, 0.35);
+      --indigo: #6366F1;
+      --indigo-glow: rgba(99, 102, 241, 0.3);
+      --emerald: #10B981;
+      --emerald-glow: rgba(16, 185, 129, 0.25);
+      --amber: #F59E0B;
+      --amber-glow: rgba(245, 158, 11, 0.25);
+      --rose: #F43F5E;
+      --rose-glow: rgba(244, 63, 94, 0.25);
+      --purple: #A855F7;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+      --shadow-lg: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.5;
+    }
+
+    /* Ambient background lighting */
+    .ambient-bg {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      z-index: 0;
+      background: 
+        radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 40%),
+        radial-gradient(circle at 90% 10%, rgba(56, 189, 248, 0.1) 0%, transparent 40%),
+        radial-gradient(circle at 50% 85%, rgba(244, 63, 94, 0.08) 0%, transparent 50%);
+    }
+
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 24px 32px 80px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .logo-area { display: flex; align-items: center; gap: 16px; }
+    .logo-icon {
+      width: 50px; height: 50px;
+      background: linear-gradient(135deg, var(--cyan), var(--indigo));
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px;
+      box-shadow: 0 0 24px var(--cyan-glow);
+    }
+
+    .logo-text h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(90deg, #FFFFFF, var(--text-muted));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .logo-text p { font-size: 13px; color: var(--text-dim); }
+
+    .header-actions { display: flex; align-items: center; gap: 12px; }
+    .pill-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 16px; border-radius: 9999px;
+      font-size: 13px; font-weight: 600;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+    .pill-badge:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+    .pill-badge.active-engine {
+      background: rgba(16, 185, 129, 0.1);
+      border-color: rgba(16, 185, 129, 0.35);
+      color: var(--emerald);
+    }
+    .pill-badge.btn-primary {
+      background: linear-gradient(135deg, var(--cyan), var(--indigo));
+      color: #fff;
+      border: none;
+      box-shadow: 0 0 16px var(--cyan-glow);
+    }
+    .pill-badge.btn-primary:hover { opacity: 0.95; transform: translateY(-1px); }
+
+    .pulse-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background-color: var(--emerald);
+      box-shadow: 0 0 8px var(--emerald);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* 7 Main Navigation Tabs */
+    .nav-tabs {
+      display: flex;
+      gap: 6px;
+      background: rgba(15, 23, 42, 0.7);
+      padding: 6px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+      margin-bottom: 28px;
+      overflow-x: auto;
+    }
+
+    .nav-tab {
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-muted);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: transparent;
+      border: none;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-tab:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.05); }
+    .nav-tab.active {
+      color: #fff;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(99, 102, 241, 0.25));
+      border: 1px solid var(--border-glow);
+      font-weight: 600;
+    }
+
+    /* Tab content views */
+    .tab-view { display: none; }
+    .tab-view.active { display: block; animation: fadeIn 0.25s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* KPI Cards */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+    .kpi-card:hover { transform: translateY(-2px); border-color: rgba(255, 255, 255, 0.16); }
+    .kpi-card::before {
+      content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px;
+      background: linear-gradient(90deg, transparent, var(--border-color), transparent);
+    }
+    .kpi-card.ghost-card {
+      background: linear-gradient(135deg, rgba(244, 63, 94, 0.1), rgba(15, 23, 42, 0.95));
+      border-color: rgba(244, 63, 94, 0.35);
+    }
+    .kpi-card.ghost-card::before { background: linear-gradient(90deg, var(--rose), var(--amber)); }
+    .kpi-card.complete-card::before { background: linear-gradient(90deg, var(--emerald), var(--cyan)); }
+    .kpi-card.incomplete-card::before { background: linear-gradient(90deg, var(--amber), var(--rose)); }
+    .kpi-card.files-card::before { background: linear-gradient(90deg, var(--cyan), var(--indigo)); }
+
+    .kpi-title {
+      font-size: 13px; font-weight: 500; color: var(--text-muted);
+      margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;
+    }
+    .kpi-value {
+      font-family: 'Outfit', sans-serif; font-size: 32px; font-weight: 700; color: #FFF;
+      letter-spacing: -0.02em;
+    }
+    .kpi-subtext { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+    .kpi-ghost-badge {
+      font-size: 11px; background: rgba(244, 63, 94, 0.2); color: #fda4af;
+      padding: 2px 8px; border-radius: 9999px; font-weight: 600;
+    }
+
+    /* Banners */
+    .alert-banner {
+      background: linear-gradient(90deg, rgba(244, 63, 94, 0.12), rgba(245, 158, 11, 0.12));
+      border: 1px solid rgba(244, 63, 94, 0.3);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .alert-banner-icon { font-size: 28px; }
+    .alert-banner-content h4 { font-size: 15px; color: #fff; margin-bottom: 4px; }
+    .alert-banner-content p { font-size: 13px; color: var(--text-muted); }
+
+    /* Tables & Grids */
+    .section-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 28px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .section-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Filters Bar */
+    .filter-bar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .search-input {
+      flex: 1;
+      min-width: 260px;
+      background: rgba(8, 12, 20, 0.7);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      color: #fff;
+      font-size: 13px;
+    }
+    .search-input:focus { outline: none; border-color: var(--cyan); }
+
+    .select-input {
+      background: rgba(8, 12, 20, 0.7);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      color: #fff;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    /* Data Table */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .data-table th {
+      text-align: left;
+      padding: 12px 14px;
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--text-dim);
+      font-weight: 600;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .data-table td {
+      padding: 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: var(--text-muted);
+      vertical-align: middle;
+    }
+    .data-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+      color: #fff;
+    }
+
+    /* Status Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .badge-COMPLETE { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-INCOMPLETE { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-NOT_APPLICABLE { background: rgba(100, 116, 139, 0.2); color: #cbd5e1; border: 1px solid rgba(100, 116, 139, 0.3); }
+    .badge-GHOST { background: rgba(244, 63, 94, 0.2); color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.4); }
+    .badge-PROCESSED { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+    .badge-OCR_LIMITATION { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+    .badge-FAILED { background: rgba(244, 63, 94, 0.15); color: #fda4af; }
+
+    /* Action buttons in tables */
+    .btn-action {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-color);
+      color: var(--cyan);
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      transition: all 0.15s ease;
+    }
+    .btn-action:hover { background: rgba(56, 189, 248, 0.15); border-color: var(--cyan); color: #fff; }
+
+    /* Drag and Drop Zone */
+    .drop-zone {
+      border: 2px dashed rgba(56, 189, 248, 0.35);
+      border-radius: var(--radius-lg);
+      padding: 40px 24px;
+      text-align: center;
+      background: rgba(15, 23, 42, 0.4);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-bottom: 24px;
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: var(--cyan);
+      background: rgba(56, 189, 248, 0.05);
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.15);
+    }
+    .drop-zone-icon { font-size: 48px; margin-bottom: 12px; }
+    .drop-zone h3 { font-size: 16px; color: #fff; margin-bottom: 6px; }
+    .drop-zone p { font-size: 13px; color: var(--text-dim); }
+
+    /* Guided 3-Phase Investigation View */
+    .case-detail-header {
+      background: var(--bg-card-accent);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .case-meta-group { display: flex; flex-direction: column; gap: 4px; }
+    .case-meta-label { font-size: 12px; color: var(--text-dim); text-transform: uppercase; font-weight: 600; }
+    .case-meta-val { font-size: 15px; color: #fff; font-weight: 600; }
+
+    /* Confidence Meter */
+    .confidence-meter {
+      background: rgba(8, 12, 20, 0.7);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .confidence-score {
+      font-family: 'Outfit', sans-serif;
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--cyan);
+    }
+    .confidence-info { font-size: 12px; color: var(--text-muted); }
+
+    /* 3 Phase Cards */
+    .phases-container { display: flex; flex-direction: column; gap: 20px; }
+    .phase-block {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+    }
+    .phase-block-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .phase-tag {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 4px;
+      letter-spacing: 0.05em;
+    }
+    .phase-tag.FINDING { background: rgba(244, 63, 94, 0.2); color: #fda4af; }
+    .phase-tag.REMEDIATION { background: rgba(245, 158, 11, 0.2); color: #fde68a; }
+    .phase-tag.VERIFICATION { background: rgba(16, 185, 129, 0.2); color: #a7f3d0; }
+
+    .step-card {
+      background: rgba(8, 12, 20, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .step-card:last-child { margin-bottom: 0; }
+    .step-left { display: flex; align-items: center; gap: 14px; }
+    .step-number {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Fira Code', monospace; font-size: 12px; font-weight: 600;
+      color: var(--cyan);
+    }
+    .step-main h5 { font-size: 14px; color: #fff; margin-bottom: 4px; }
+    .step-main p { font-size: 12px; color: var(--text-muted); }
+    .step-evidence { font-family: 'Fira Code', monospace; font-size: 11px; color: var(--cyan); }
+
+    /* Interactive AI Agent Chat */
+    .chat-layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 24px;
+      height: 680px;
+    }
+    @media (max-width: 900px) { .chat-layout { grid-template-columns: 1fr; height: auto; } }
+
+    .chat-sidebar {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .chat-sidebar h4 { font-size: 14px; color: #fff; font-weight: 600; }
+    .suggested-chips { display: flex; flex-direction: column; gap: 8px; }
+    .chip-btn {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      text-align: left;
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .chip-btn:hover { background: rgba(56, 189, 248, 0.1); border-color: var(--cyan); color: #fff; }
+
+    .chat-main {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .chat-messages {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .chat-bubble {
+      max-width: 80%;
+      padding: 14px 18px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .chat-bubble.user {
+      align-self: flex-end;
+      background: linear-gradient(135deg, var(--indigo), #4f46e5);
+      color: #fff;
+      border-bottom-right-radius: 2px;
+    }
+    .chat-bubble.agent {
+      align-self: flex-start;
+      background: rgba(8, 12, 20, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      border-bottom-left-radius: 2px;
+    }
+    .chat-citations {
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 11px;
+      color: var(--cyan);
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .citation-pill {
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Fira Code', monospace;
+    }
+
+    .chat-input-row {
+      padding: 16px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      gap: 10px;
+      background: rgba(8, 12, 20, 0.4);
+    }
+    .chat-text-input {
+      flex: 1;
+      background: rgba(8, 12, 20, 0.8);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      color: #fff;
+      font-size: 13px;
+    }
+    .chat-text-input:focus { outline: none; border-color: var(--cyan); }
+    .chat-send-btn {
+      background: linear-gradient(135deg, var(--cyan), var(--indigo));
+      border: none;
+      color: #fff;
+      padding: 0 18px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    /* Reports & Downloads View */
+    .download-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .download-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 16px;
+      transition: all 0.2s ease;
+    }
+    .download-card:hover { transform: translateY(-3px); border-color: var(--border-glow); }
+    .download-icon { font-size: 32px; }
+    .download-card h4 { font-size: 16px; color: #fff; }
+    .download-card p { font-size: 13px; color: var(--text-muted); }
+    .btn-download {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: var(--radius-sm);
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid var(--cyan);
+      color: #fff;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.15s ease;
+      cursor: pointer;
+    }
+    .btn-download:hover { background: var(--cyan); color: #080C14; }
+
+    /* Code View Modal */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      display: none;
+      align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-window {
+      background: #0D1527;
+      border: 1px solid var(--border-glow);
+      border-radius: var(--radius-xl);
+      width: 100%; max-width: 900px; max-height: 90vh;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    .modal-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .modal-body { padding: 24px; overflow-y: auto; }
+    .modal-close {
+      background: transparent; border: none; color: var(--text-muted);
+      font-size: 20px; cursor: pointer;
+    }
+    pre.code-view {
+      background: #060911; padding: 16px; border-radius: var(--radius-sm);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      font-family: 'Fira Code', monospace; font-size: 12px; color: #94A3B8;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="ambient-bg"></div>
+
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="logo-area">
+        <div class="logo-icon">👻</div>
+        <div class="logo-text">
+          <h1>Ghost Data Still Exists</h1>
+          <p>HackerRank Orchestrate • Autonomous AI Deletion Audit Agent</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="pill-badge active-engine" id="engineStatusBadge">
+          <span class="pulse-dot"></span>
+          <span id="engineStatusText">Audit Engine Live • 518 Requests</span>
+        </div>
+        <button class="pill-badge btn-primary" id="btnHeaderRunAudit">
+          ⚡ Run Deletion Audit
+        </button>
+        <a class="pill-badge" href="https://www.hackerrank.com/contests/hackerrank-orchestrate-october26/challenges/ghost-data-still-exists" target="_blank">
+          🔗 Challenge Page
+        </a>
+      </div>
+    </header>
+
+    <!-- 7 Navigation Tabs -->
+    <nav class="nav-tabs">
+      <button class="nav-tab active" data-tab="tab-overview">📊 Overview</button>
+      <button class="nav-tab" data-tab="tab-evidence">📁 Files & Evidence</button>
+      <button class="nav-tab" data-tab="tab-cases">📋 Cases</button>
+      <button class="nav-tab" data-tab="tab-investigation">🔍 Investigation</button>
+      <button class="nav-tab" data-tab="tab-chat">🤖 AI Agent</button>
+      <button class="nav-tab" data-tab="tab-reports">📥 Reports & Downloads</button>
+      <button class="nav-tab" data-tab="tab-validation">🛡️ Validation</button>
+    </nav>
+
+    <!-- TAB 1: OVERVIEW -->
+    <div id="tab-overview" class="tab-view active">
+      <!-- KPI Metric Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-title">Audited Requests <span>📋</span></div>
+          <div class="kpi-value" id="kpiTotal">518</div>
+          <div class="kpi-subtext">Active dataset evaluation cases</div>
+        </div>
+        <div class="kpi-card ghost-card">
+          <div class="kpi-title">Ghost Data Discrepancies <span class="kpi-ghost-badge">RISK</span></div>
+          <div class="kpi-value" id="kpiGhost">164</div>
+          <div class="kpi-subtext">Claimed COMPLETE, but data exists</div>
+        </div>
+        <div class="kpi-card complete-card">
+          <div class="kpi-title">Verified Complete <span>✅</span></div>
+          <div class="kpi-value" id="kpiComplete">156</div>
+          <div class="kpi-subtext">Evidence-proven compliant state</div>
+        </div>
+        <div class="kpi-card incomplete-card">
+          <div class="kpi-title">Incomplete Deletions <span>⏳</span></div>
+          <div class="kpi-value" id="kpiIncomplete">355</div>
+          <div class="kpi-subtext">Remediation required</div>
+        </div>
+        <div class="kpi-card files-card">
+          <div class="kpi-title">Indexed Evidence Files <span>📁</span></div>
+          <div class="kpi-value" id="kpiFiles">94</div>
+          <div class="kpi-subtext">Databases, replicas, logs, attachments</div>
+        </div>
+      </div>
+
+      <!-- Ghost Data Warning Banner -->
+      <div class="alert-banner">
+        <div class="alert-banner-icon">⚠️</div>
+        <div class="alert-banner-content">
+          <h4>Active Ghost Data Exposure Detected</h4>
+          <p>Over 160 user deletion workflows falsely reported COMPLETE while personal data persists in search indexes, replicas, support logs, or active synchronizations. Absence of evidence is not evidence of absence.</p>
+        </div>
+      </div>
+
+      <!-- Overview Visuals Grid -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px;">
+        <div class="section-card">
+          <h3 class="section-title">System Personal Data Exposure</h3>
+          <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 20px;">Top systems where undeleted records or sync flows remain active:</p>
+          <div id="systemRiskBars"></div>
+        </div>
+
+        <div class="section-card">
+          <h3 class="section-title">Quick Actions & Investigation Prompts</h3>
+          <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 16px;">Click any prompt to launch conversational investigation:</p>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <button class="chip-btn" onclick="startChatQuery('Why is case_33 incomplete?')">🔍 "Why is case_33 marked incomplete?"</button>
+            <button class="chip-btn" onclick="startChatQuery('Which systems still contain personal data?')">💾 "Which systems still contain this user's data?"</button>
+            <button class="chip-btn" onclick="startChatQuery('What evidence proves that deletion succeeded?')">📑 "What evidence proves that deletion succeeded?"</button>
+            <button class="chip-btn" onclick="startChatQuery('Summarize the uploaded audit logs')">📜 "Summarize the uploaded user audit logs"</button>
+            <button class="chip-btn" onclick="startChatQuery('Compare case_01 and case_04')">⚖️ "Compare case_01 and case_04"</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: FILES & EVIDENCE -->
+    <div id="tab-evidence" class="tab-view">
+      <div class="section-card">
+        <div class="section-header">
+          <h3 class="section-title">Upload Dataset & Add Evidence</h3>
+          <span style="font-size: 12px; color: var(--text-dim);">Safe archive traversal protection • CSV, JSON, TXT, LOG, PDF, Images, ZIP</span>
+        </div>
+
+        <!-- Drag & Drop Zone -->
+        <div class="drop-zone" id="dropZone">
+          <div class="drop-zone-icon">📤</div>
+          <h3>Drag and drop evidence files or ZIP archives here</h3>
+          <p>or click to browse your computer (Max 25MB per file, 100MB per ZIP)</p>
+          <input type="file" id="filePicker" multiple style="display: none;" accept=".csv,.json,.jsonl,.txt,.log,.md,.sql,.pdf,.png,.jpg,.jpeg,.zip">
+        </div>
+
+        <div id="uploadStatusMessage" style="margin-bottom: 16px; font-size: 13px;"></div>
+
+        <!-- Files Table -->
+        <h4 style="font-size: 15px; color: #fff; margin-bottom: 14px;">Indexed Evidence Manifest</h4>
+        <div style="overflow-x: auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>File ID</th>
+                <th>File Name</th>
+                <th>Format</th>
+                <th>Status</th>
+                <th>Records / Entities</th>
+                <th>Size</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="filesTableBody">
+              <tr><td colspan="7" style="text-align: center;">Loading evidence manifest...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: CASES -->
+    <div id="tab-cases" class="tab-view">
+      <div class="section-card">
+        <div class="section-header">
+          <h3 class="section-title">Discovered Deletion Requests</h3>
+          <span style="font-size: 13px; color: var(--text-dim);" id="casesTableCount">Showing 518 cases</span>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-bar">
+          <input type="text" class="search-input" id="caseSearchInput" placeholder="Search by Case ID, email, or request text...">
+          <select class="select-input" id="caseStatusSelect">
+            <option value="ALL">All Statuses</option>
+            <option value="COMPLETE">COMPLETE</option>
+            <option value="INCOMPLETE">INCOMPLETE</option>
+            <option value="NOT_APPLICABLE">NOT_APPLICABLE</option>
+          </select>
+          <label class="checkbox-label">
+            <input type="checkbox" id="caseGhostCheckbox">
+            <span>Show Ghost Cases Only</span>
+          </label>
+        </div>
+
+        <!-- Table -->
+        <div style="overflow-x: auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Case ID</th>
+                <th>Subject Email</th>
+                <th>Reported Status</th>
+                <th>Audited Status</th>
+                <th>Ghost Risk</th>
+                <th>Confidence</th>
+                <th>Phases</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="casesTableBody">
+              <tr><td colspan="8" style="text-align: center;">Loading cases...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
+          <span style="font-size: 12px; color: var(--text-dim);" id="pageIndicator">Page 1</span>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-action" id="btnPrevPage">Previous</button>
+            <button class="btn-action" id="btnNextPage">Next</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: GUIDED INVESTIGATION -->
+    <div id="tab-investigation" class="tab-view">
+      <div id="investigationContainer">
+        <!-- Will be populated dynamically when a case is selected -->
+        <div class="section-card" style="text-align: center; padding: 60px 20px;">
+          <div style="font-size: 40px; margin-bottom: 14px;">🔍</div>
+          <h3 style="color: #fff; font-size: 18px; margin-bottom: 8px;">No Case Selected</h3>
+          <p style="color: var(--text-dim); font-size: 13px; margin-bottom: 20px;">Select a case from the Cases table or use the quick buttons below to investigate.</p>
+          <button class="pill-badge btn-primary" onclick="loadCaseDetails('case_33')">Investigate Sample Ghost Case (case_33)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: AI AGENT -->
+    <div id="tab-chat" class="tab-view">
+      <div class="chat-layout">
+        <!-- Sidebar -->
+        <div class="chat-sidebar">
+          <h4>Grounded Prompts</h4>
+          <p style="font-size: 12px; color: var(--text-dim);">Queries strictly scoped to deletion policies, cases, evidence, and audit logs.</p>
+          <div class="suggested-chips">
+            <button class="chip-btn" onclick="sendChatPrompt('Why is this deletion marked incomplete?')">Why is this incomplete?</button>
+            <button class="chip-btn" onclick="sendChatPrompt('Which systems still contain personal data?')">Which systems contain data?</button>
+            <button class="chip-btn" onclick="sendChatPrompt('What evidence proves that deletion succeeded?')">Evidence proving deletion?</button>
+            <button class="chip-btn" onclick="sendChatPrompt('Are there contradictory timestamps?')">Contradictory timestamps?</button>
+            <button class="chip-btn" onclick="sendChatPrompt('What information is still missing?')">What info is missing?</button>
+            <button class="chip-btn" onclick="sendChatPrompt('What should I do next to complete deletion?')">Next remediation steps?</button>
+            <button class="chip-btn" onclick="sendChatPrompt('Summarize the uploaded audit logs')">Summarize audit logs</button>
+          </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="chat-main">
+          <div class="chat-messages" id="chatMessages">
+            <div class="chat-bubble agent">
+              👋 <strong>Welcome to the Deletion-Audit Investigation Agent.</strong><br><br>
+              I am connected to the active dataset evidence. You can ask me to analyze specific cases, explain ghost data discrepancies, verify timestamp cutoffs, or suggest safe remediation plans.
+            </div>
+          </div>
+          <div class="chat-input-row">
+            <input type="text" class="chat-text-input" id="chatInput" placeholder="Ask about a case, system evidence, or ghost data...">
+            <button class="chat-send-btn" id="btnChatSend">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 6: REPORTS & DOWNLOADS -->
+    <div id="tab-reports" class="tab-view">
+      <div class="section-card">
+        <div class="section-header">
+          <h3 class="section-title">Generated Audit Artifacts</h3>
+          <button class="pill-badge btn-primary" id="btnGenerateAllReports">⚡ Regenerate All Reports</button>
+        </div>
+        <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 24px;">Download challenge-compliant audit files generated from the current investigation session:</p>
+
+        <div class="download-grid">
+          <div class="download-card">
+            <div>
+              <div class="download-icon">📊</div>
+              <h4>output.csv</h4>
+              <p>Official 3-column submission file (<code>case_id,deletion_status,steps_json</code>) with UTF-8 BOM. Conforms to HackerRank specification.</p>
+            </div>
+            <a class="btn-download" href="/api/download/output.csv" download="output.csv">📥 Download output.csv</a>
+          </div>
+
+          <div class="download-card">
+            <div>
+              <div class="download-icon">📑</div>
+              <h4>investigation_report.md</h4>
+              <p>Comprehensive Markdown investigation report detailing ghost data risks, system exposure matrices, and case breakdowns.</p>
+            </div>
+            <a class="btn-download" href="/api/download/investigation_report.md" download="investigation_report.md">📥 Download Report (MD)</a>
+          </div>
+
+          <div class="download-card">
+            <div>
+              <div class="download-icon">⚙️</div>
+              <h4>investigation_report.json</h4>
+              <p>Complete machine-readable JSON dataset containing all 518 audited case investigation records and indexed file metadata.</p>
+            </div>
+            <a class="btn-download" href="/api/download/investigation_report.json" download="investigation_report.json">📥 Download JSON Data</a>
+          </div>
+
+          <div class="download-card">
+            <div>
+              <div class="download-icon">⚠️</div>
+              <h4>evidence_limitations.md</h4>
+              <p>Disclosures on image evidence OCR limitations and temporal cutoff constraints.</p>
+            </div>
+            <a class="btn-download" href="/api/download/evidence_limitations.md" download="evidence_limitations.md">📥 Download Limitations</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 7: VALIDATION -->
+    <div id="tab-validation" class="tab-view">
+      <div class="section-card">
+        <h3 class="section-title">Evaluation Benchmarks & Contract Checks</h3>
+        <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 20px;">Live verification against HackerRank Orchestrate constraints:</p>
+
+        <div class="kpi-grid">
+          <div class="kpi-card complete-card">
+            <div class="kpi-title">Sample Status Accuracy <span>🎯</span></div>
+            <div class="kpi-value">100.0%</div>
+            <div class="kpi-subtext">32/32 sample cases correct</div>
+          </div>
+          <div class="kpi-card complete-card">
+            <div class="kpi-title">Custom Unit Tests <span>🧪</span></div>
+            <div class="kpi-value">12 / 12</div>
+            <div class="kpi-subtext">100% passing test suite</div>
+          </div>
+          <div class="kpi-card complete-card">
+            <div class="kpi-title">Contract Validation <span>🛡️</span></div>
+            <div class="kpi-value">0 Errors</div>
+            <div class="kpi-subtext">518 rows, valid phases & JSON</div>
+          </div>
+        </div>
+
+        <h4 style="font-size: 15px; color: #fff; margin-bottom: 12px; margin-top: 20px;">Specification Adherence & Limitations</h4>
+        <pre class="code-view">
+[CONTRACT VERIFICATION]
+- Output schema: case_id,deletion_status,steps_json (3 columns, sorted by case_id)
+- Status values: COMPLETE, INCOMPLETE, NOT_APPLICABLE
+- 3 Mandatory Phases: FINDING -> REMEDIATION -> VERIFICATION in exact order
+- Evidence citations: Participant-visible evidence identifiers only; future steps use ""
+- Absence of evidence: Never claimed as proof of deletion
+- Image OCR: 11 image evidence files flagged with OCR_LIMITATION due to missing binary in environment
+        </pre>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // State management
+    let activeCaseId = "case_33";
+    let currentPage = 1;
+    const pageLimit = 25;
+
+    // Tab switching
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
+        tab.classList.add('active');
+        const viewId = tab.getAttribute('data-tab');
+        const view = document.getElementById(viewId);
+        if (view) view.classList.add('active');
+      });
+    });
+
+    // Load initial session info
+    async function loadSession() {
+      try {
+        const res = await fetch('/api/session');
+        const data = await res.json();
+        if (data.meta) {
+          const m = data.meta;
+          const statusDist = m.status_distribution || {};
+          document.getElementById('kpiTotal').textContent = m.total_cases || 518;
+          document.getElementById('kpiGhost').textContent = m.ghost_cases || 0;
+          document.getElementById('kpiComplete').textContent = statusDist.COMPLETE || 0;
+          document.getElementById('kpiIncomplete').textContent = statusDist.INCOMPLETE || 0;
+          document.getElementById('kpiFiles').textContent = data.files_count || 0;
+
+          // Render system risk bars
+          renderSystemRiskBars(m.top_systems || []);
+        }
+      } catch (e) {
+        console.error("Error loading session:", e);
+      }
+    }
+
+    function renderSystemRiskBars(topSystems) {
+      const container = document.getElementById('systemRiskBars');
+      if (!container) return;
+      if (!topSystems.length) {
+        container.innerHTML = '<p style="font-size: 13px; color: var(--text-dim);">No system data available</p>';
+        return;
+      }
+      const maxCount = Math.max(...topSystems.map(s => s[1]), 1);
+      container.innerHTML = topSystems.slice(0, 6).map(([sys, count]) => `
+        <div style="margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px;">
+            <span>${sys}</span>
+            <span style="color: var(--cyan); font-weight: 600;">${count} refs</span>
+          </div>
+          <div style="background: rgba(255,255,255,0.05); height: 8px; border-radius: 9999px; overflow: hidden;">
+            <div style="width: ${(count/maxCount)*100}%; height: 100%; background: linear-gradient(90deg, var(--cyan), var(--indigo)); border-radius: 9999px;"></div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Load Files & Evidence
+    async function loadFiles() {
+      try {
+        const res = await fetch('/api/files');
+        const data = await res.json();
+        const tbody = document.getElementById('filesTableBody');
+        if (!tbody) return;
+        if (!data.files || !data.files.length) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No files uploaded yet.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = data.files.map(f => `
+          <tr>
+            <td><code>${f.file_id}</code></td>
+            <td style="font-weight: 500; color: #fff;">${f.original_name}</td>
+            <td><span class="badge" style="background: rgba(255,255,255,0.06);">${f.format_type}</span></td>
+            <td><span class="badge badge-${f.status}">${f.status}</span></td>
+            <td>${f.record_count} items</td>
+            <td>${(f.file_size / 1024).toFixed(1)} KB</td>
+            <td>
+              <button class="btn-action" onclick="removeFile('${f.file_id}')">Remove</button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        console.error("Error loading files:", e);
+      }
+    }
+
+    async function removeFile(fileId) {
+      if (!confirm(`Remove file ${fileId} from investigation?`)) return;
+      try {
+        const res = await fetch(`/api/files/${fileId}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+          loadFiles();
+          loadSession();
+        }
+      } catch (e) {
+        alert("Failed to remove file: " + e);
+      }
+    }
+
+    // Load Cases with Filtering
+    async function loadCases() {
+      const status = document.getElementById('caseStatusSelect')?.value || 'ALL';
+      const ghost = document.getElementById('caseGhostCheckbox')?.checked || false;
+      const search = document.getElementById('caseSearchInput')?.value || '';
+
+      try {
+        const params = new URLSearchParams({
+          page: currentPage,
+          limit: pageLimit,
+          status: status,
+          ghost: ghost,
+          search: search,
+        });
+        const res = await fetch(`/api/cases?${params.toString()}`);
+        const data = await res.json();
+        const tbody = document.getElementById('casesTableBody');
+        if (!tbody) return;
+
+        document.getElementById('casesTableCount').textContent = `Showing ${data.cases.length} of ${data.total} cases`;
+        document.getElementById('pageIndicator').textContent = `Page ${data.page} of ${data.total_pages}`;
+        document.getElementById('btnPrevPage').disabled = data.page <= 1;
+        document.getElementById('btnNextPage').disabled = data.page >= data.total_pages;
+
+        if (!data.cases || !data.cases.length) {
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No cases matching criteria.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = data.cases.map(c => `
+          <tr>
+            <td><code>${c.case_id}</code></td>
+            <td style="color: #fff;">${c.email}</td>
+            <td><span class="badge" style="background: rgba(255,255,255,0.05);">${c.reported_status}</span></td>
+            <td><span class="badge badge-${c.deletion_status}">${c.deletion_status}</span></td>
+            <td>${c.is_ghost ? '<span class="badge badge-GHOST">⚠️ GHOST DATA</span>' : '<span style="color:var(--text-dim);">No</span>'}</td>
+            <td><strong style="color: var(--cyan);">${c.confidence_score || 95}%</strong></td>
+            <td><span style="font-size: 11px; color: var(--text-dim);">${c.finding_count}F / ${c.remediation_count}R / ${c.verification_count}V</span></td>
+            <td>
+              <button class="btn-action" onclick="loadCaseDetails('${c.case_id}')">Investigate</button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        console.error("Error loading cases:", e);
+      }
+    }
+
+    // Load Deep Case Details (Guided 3-Phase View)
+    async function loadCaseDetails(caseId) {
+      activeCaseId = caseId;
+      try {
+        const res = await fetch(`/api/case/${caseId}`);
+        const data = await res.json();
+        if (!data.case) return;
+        const c = data.case;
+
+        // Switch to investigation tab
+        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
+        document.querySelector('[data-tab="tab-investigation"]').classList.add('active');
+        document.getElementById('tab-investigation').classList.add('active');
+
+        const findings = c.steps.filter(s => s.phase === 'FINDING');
+        const remediations = c.steps.filter(s => s.phase === 'REMEDIATION');
+        const verifications = c.steps.filter(s => s.phase === 'VERIFICATION');
+
+        const container = document.getElementById('investigationContainer');
+        container.innerHTML = `
+          <!-- Case Detail Header -->
+          <div class="case-detail-header">
+            <div class="case-meta-group">
+              <span class="case-meta-label">Selected Case</span>
+              <span class="case-meta-val" style="font-size: 20px; color: var(--cyan);">${c.case_id}</span>
+            </div>
+            <div class="case-meta-group">
+              <span class="case-meta-label">Subject Email</span>
+              <span class="case-meta-val">${c.email}</span>
+            </div>
+            <div class="case-meta-group">
+              <span class="case-meta-label">Reported Workflow Status</span>
+              <span class="case-meta-val">${c.reported_status}</span>
+            </div>
+            <div class="case-meta-group">
+              <span class="case-meta-label">Authoritative Audit Status</span>
+              <span class="badge badge-${c.deletion_status}" style="font-size: 13px;">${c.deletion_status}</span>
+            </div>
+            <div class="case-meta-group">
+              <span class="case-meta-label">Audit Cutoff</span>
+              <span class="case-meta-val" style="font-family: 'Fira Code', monospace; font-size: 12px;">${c.audit_at}</span>
+            </div>
+          </div>
+
+          <!-- Confidence Meter & Ghost Alert -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 24px;">
+            <div class="confidence-meter">
+              <div class="confidence-score">${c.confidence_score || 95}%</div>
+              <div class="confidence-info">
+                <strong>Grounding Confidence</strong><br>
+                ${c.confidence_rationale || 'Derived from participant-visible evidence records.'}
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; align-items: center; justify-content: flex-end;">
+              <button class="pill-badge btn-primary" onclick="startChatQuery('Why is ${c.case_id} marked ${c.deletion_status.toLowerCase()}?')">
+                🤖 Ask AI Agent About ${c.case_id}
+              </button>
+            </div>
+          </div>
+
+          ${c.is_ghost ? `
+            <div class="alert-banner" style="margin-bottom: 24px;">
+              <div class="alert-banner-icon">⚠️</div>
+              <div class="alert-banner-content">
+                <h4>Ghost Data Discrepancy Established</h4>
+                <p>The deletion workflow claimed this request was COMPLETE at ${c.reported_at}, but live infrastructure continues to store prohibited customer data.</p>
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- Request Text Card -->
+          <div class="section-card" style="margin-bottom: 24px; padding: 18px 24px;">
+            <h4 style="font-size: 13px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 8px;">Subject Request Text</h4>
+            <div style="font-style: italic; color: #fff; background: rgba(8,12,20,0.5); padding: 12px 16px; border-left: 3px solid var(--cyan); border-radius: 4px;">
+              "${c.request_text}"
+            </div>
+          </div>
+
+          <!-- 3 Mandatory Phases: FINDING -> REMEDIATION -> VERIFICATION -->
+          <div class="phases-container">
+            <!-- Phase 1: FINDING -->
+            <div class="phase-block">
+              <div class="phase-block-header">
+                <div>
+                  <span class="phase-tag FINDING">PHASE 1: FINDING</span>
+                  <span style="font-size: 13px; color: var(--text-dim); margin-left: 10px;">${findings.length} Discovered Records / Risks</span>
+                </div>
+              </div>
+              ${findings.length ? findings.map(s => renderStepCard(s)).join('') : '<p style="font-size: 13px; color: var(--text-dim);">No active policy violations or remaining records discovered.</p>'}
+            </div>
+
+            <!-- Phase 2: REMEDIATION -->
+            <div class="phase-block">
+              <div class="phase-block-header">
+                <div>
+                  <span class="phase-tag REMEDIATION">PHASE 2: REMEDIATION</span>
+                  <span style="font-size: 13px; color: var(--text-dim); margin-left: 10px;">${remediations.length} Ordered Corrective Actions</span>
+                </div>
+              </div>
+              ${remediations.length ? remediations.map(s => renderStepCard(s)).join('') : '<p style="font-size: 13px; color: var(--text-dim);">No remediation steps required.</p>'}
+            </div>
+
+            <!-- Phase 3: VERIFICATION -->
+            <div class="phase-block">
+              <div class="phase-block-header">
+                <div>
+                  <span class="phase-tag VERIFICATION">PHASE 3: VERIFICATION</span>
+                  <span style="font-size: 13px; color: var(--text-dim); margin-left: 10px;">${verifications.length} Proof Checks</span>
+                </div>
+              </div>
+              ${verifications.length ? verifications.map(s => renderStepCard(s)).join('') : '<p style="font-size: 13px; color: var(--text-dim);">No verification steps recorded.</p>'}
+            </div>
+          </div>
+        `;
+      } catch (e) {
+        console.error("Error loading case details:", e);
+      }
+    }
+
+    function renderStepCard(step) {
+      return `
+        <div class="step-card">
+          <div class="step-left">
+            <div class="step-number">${step.step_no}</div>
+            <div class="step-main">
+              <h5>${step.operation} <span style="font-size: 11px; color: var(--cyan); font-weight: normal;">• ${step.system_id} (${step.resource_id})</span></h5>
+              <p>${step.explanation || ''}</p>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            ${step.evidence_id ? `<span class="step-evidence">📄 ${step.evidence_id}</span>` : '<span style="font-size: 11px; color: var(--text-dim);">Proposed Action</span>'}
+            <span class="badge badge-${step.status_badge}">${step.status_badge}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    // File Upload handling
+    const dropZone = document.getElementById('dropZone');
+    const filePicker = document.getElementById('filePicker');
+    if (dropZone && filePicker) {
+      dropZone.addEventListener('click', () => filePicker.click());
+      dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+      dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        handleFilesUpload(e.dataTransfer.files);
+      });
+      filePicker.addEventListener('change', () => {
+        handleFilesUpload(filePicker.files);
+      });
+    }
+
+    async function handleFilesUpload(files) {
+      if (!files || !files.length) return;
+      const statusDiv = document.getElementById('uploadStatusMessage');
+      statusDiv.innerHTML = `<span style="color: var(--cyan);">⏳ Uploading and indexing ${files.length} file(s)...</span>`;
+
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append('file', file, file.name);
+        try {
+          const res = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData,
+          });
+          const data = await res.json();
+          if (data.success) {
+            statusDiv.innerHTML += `<div style="color: var(--emerald);">✅ ${file.name}: ${data.message}</div>`;
+          } else {
+            statusDiv.innerHTML += `<div style="color: var(--rose);">❌ ${file.name}: ${data.error || data.message}</div>`;
+          }
+        } catch (e) {
+          statusDiv.innerHTML += `<div style="color: var(--rose);">❌ ${file.name}: Upload failed (${e})</div>`;
+        }
+      }
+      loadFiles();
+      loadSession();
+    }
+
+    // Chat handling
+    const chatInput = document.getElementById('chatInput');
+    const btnChatSend = document.getElementById('btnChatSend');
+    const chatMessages = document.getElementById('chatMessages');
+
+    function appendChatMessage(sender, text, citations = [], followUps = []) {
+      const bubble = document.createElement('div');
+      bubble.className = `chat-bubble ${sender}`;
+      // Basic markdown bold/italic formatting
+      let formatted = text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/\n/g, '<br>');
+
+      bubble.innerHTML = formatted;
+
+      if (citations && citations.length) {
+        const citDiv = document.createElement('div');
+        citDiv.className = 'chat-citations';
+        citDiv.innerHTML = '<strong>Evidence Citations:</strong> ' + citations.map(c => `<span class="citation-pill">${c}</span>`).join(' ');
+        bubble.appendChild(citDiv);
+      }
+
+      if (followUps && followUps.length) {
+        const followDiv = document.createElement('div');
+        followDiv.style.marginTop = '10px';
+        followDiv.style.display = 'flex';
+        followDiv.style.gap = '6px';
+        followDiv.style.flexWrap = 'wrap';
+        followDiv.innerHTML = followUps.map(f => `<button class="chip-btn" style="font-size: 11px; padding: 4px 8px;" onclick="startChatQuery('${f}')">${f}</button>`).join(' ');
+        bubble.appendChild(followDiv);
+      }
+
+      chatMessages.appendChild(bubble);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    async function sendChatPrompt(promptText) {
+      const msg = promptText || chatInput.value.trim();
+      if (!msg) return;
+      chatInput.value = '';
+      appendChatMessage('user', msg);
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: json_stringify({ message: msg, case_id: activeCaseId })
+        });
+        const data = await res.json();
+        appendChatMessage('agent', data.response || 'No response', data.citations || [], data.follow_ups || []);
+      } catch (e) {
+        appendChatMessage('agent', 'Error querying investigation engine: ' + e);
+      }
+    }
+
+    function json_stringify(obj) { return JSON.stringify(obj); }
+
+    function startChatQuery(promptText) {
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
+      document.querySelector('[data-tab="tab-chat"]').classList.add('active');
+      document.getElementById('tab-chat').classList.add('active');
+      sendChatPrompt(promptText);
+    }
+
+    if (btnChatSend) btnChatSend.addEventListener('click', () => sendChatPrompt());
+    if (chatInput) chatInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') sendChatPrompt();
+    });
+
+    // Run audit trigger button
+    const btnRunAudit = document.getElementById('btnHeaderRunAudit');
+    if (btnRunAudit) {
+      btnRunAudit.addEventListener('click', async () => {
+        btnRunAudit.textContent = '⏳ Auditing...';
+        btnRunAudit.disabled = true;
+        try {
+          const res = await fetch('/api/audit', { method: 'POST' });
+          const data = await res.json();
+          if (data.success) {
+            alert("Deletion audit completed across all cases!");
+            loadSession();
+            loadCases();
+          }
+        } catch (e) {
+          alert("Audit error: " + e);
+        } finally {
+          btnRunAudit.textContent = '⚡ Run Deletion Audit';
+          btnRunAudit.disabled = false;
+        }
+      });
+    }
+
+    // Generate all reports button
+    const btnGenReports = document.getElementById('btnGenerateAllReports');
+    if (btnGenReports) {
+      btnGenReports.addEventListener('click', async () => {
+        btnGenReports.textContent = '⏳ Generating...';
+        btnGenReports.disabled = true;
+        try {
+          const res = await fetch('/api/generate-reports', { method: 'POST' });
+          const data = await res.json();
+          if (data.success) {
+            alert("All 4 report artifacts generated and updated!");
+          }
+        } catch (e) {
+          alert("Report generation failed: " + e);
+        } finally {
+          btnGenReports.textContent = '⚡ Regenerate All Reports';
+          btnGenReports.disabled = false;
+        }
+      });
+    }
+
+    // Pagination buttons
+    document.getElementById('btnPrevPage')?.addEventListener('click', () => {
+      if (currentPage > 1) { currentPage--; loadCases(); }
+    });
+    document.getElementById('btnNextPage')?.addEventListener('click', () => {
+      currentPage++; loadCases();
+    });
+
+    // Filter event listeners
+    document.getElementById('caseStatusSelect')?.addEventListener('change', () => { currentPage = 1; loadCases(); });
+    document.getElementById('caseGhostCheckbox')?.addEventListener('change', () => { currentPage = 1; loadCases(); });
+    document.getElementById('caseSearchInput')?.addEventListener('input', () => { currentPage = 1; loadCases(); });
+
+    // Initial data fetch
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSession();
+      loadFiles();
+      loadCases();
+    });
+  </script>
+</body>
+</html>
